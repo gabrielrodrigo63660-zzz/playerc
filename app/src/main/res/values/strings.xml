@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Capri Player</string>
+    <string name="logo">CAPRI PLAYER</string>
+    <string name="hint_search">Buscar música, artista, álbum…</string>
+</resources>
