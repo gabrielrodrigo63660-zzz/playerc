@@ -266,32 +266,34 @@
                         android:layout_marginTop="2dp" />
                 </LinearLayout>
 
-                <TextView
+                <ImageView
                     android:id="@+id/prev"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="⏮"
-                    android:textSize="20sp"
-                    android:textColor="@color/text"
-                    android:padding="10dp" />
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:padding="10dp"
+                    android:src="@drawable/ic_prev"
+                    android:tint="@color/text"
+                    android:contentDescription="@string/app_name" />
 
-                <TextView
+                <ImageView
                     android:id="@+id/play"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="▶"
-                    android:textSize="24sp"
-                    android:textColor="@color/red"
-                    android:padding="10dp" />
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginEnd="4dp"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_play"
+                    android:tint="@color/red"
+                    android:contentDescription="@string/app_name" />
 
-                <TextView
+                <ImageView
                     android:id="@+id/next"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="⏭"
-                    android:textSize="20sp"
-                    android:textColor="@color/text"
-                    android:padding="10dp" />
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:padding="10dp"
+                    android:src="@drawable/ic_next"
+                    android:tint="@color/text"
+                    android:contentDescription="@string/app_name" />
             </LinearLayout>
 
             <LinearLayout
@@ -337,26 +339,26 @@
                 android:orientation="horizontal"
                 android:gravity="center">
 
-                <TextView
+                <ImageView
                     android:id="@+id/shuf"
                     android:layout_width="46dp"
                     android:layout_height="46dp"
-                    android:text="🔀"
-                    android:textSize="20sp"
-                    android:gravity="center"
+                    android:padding="12dp"
+                    android:src="@drawable/ic_shuffle"
                     android:background="@drawable/btn_circle"
-                    android:alpha="0.5" />
+                    android:alpha="0.5"
+                    android:contentDescription="@string/app_name" />
 
-                <TextView
+                <ImageView
                     android:id="@+id/rep"
                     android:layout_width="46dp"
                     android:layout_height="46dp"
-                    android:text="🔁"
-                    android:textSize="20sp"
-                    android:gravity="center"
+                    android:layout_marginStart="26dp"
+                    android:padding="12dp"
+                    android:src="@drawable/ic_repeat"
                     android:background="@drawable/btn_circle"
                     android:alpha="0.5"
-                    android:layout_marginStart="26dp" />
+                    android:contentDescription="@string/app_name" />
 
                 <TextView
                     android:id="@+id/openfull"

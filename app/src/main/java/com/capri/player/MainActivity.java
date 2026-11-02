@@ -54,8 +54,8 @@ public class MainActivity extends Activity {
     private EditText search;
     private TextView nTitle, nArtist, cur, dur;
     private TextView fTitle, fArtist, fCur, fDur;
-    private TextView playBtn, shufBtn, repBtn, prevB, nextB;
-    private TextView fPlay, fPrev, fNext, fShuf, fRep;
+    private ImageView playBtn, shufBtn, repBtn, prevB, nextB;
+    private ImageView fPlay, fPrev, fNext, fShuf, fRep;
     private TextView btnSort, btnGrid;
     private TextView tabAll, tabArtist, tabAlbum, tabTop;
     private ImageView nArt, fArt;
@@ -321,24 +321,30 @@ public class MainActivity extends Activity {
         if (srv == null) return;
         boolean shuf = srv.isShuffle();
         int rep = srv.getRepeat();
+        int off = 0xFF9A9AA6;
 
         shufBtn.setAlpha(shuf ? 1f : 0.45f);
         fShuf.setAlpha(shuf ? 1f : 0.5f);
+        int sc = shuf ? 0xFF3DFF5E : off;
+        shufBtn.setColorFilter(sc);
+        fShuf.setColorFilter(sc);
         shufBtn.setBackgroundResource(shuf ? R.drawable.btn_glow_green : R.drawable.btn_circle);
         fShuf.setBackgroundResource(shuf ? R.drawable.btn_glow_green : R.drawable.btn_circle);
 
         repBtn.setAlpha(rep > 0 ? 1f : 0.45f);
         fRep.setAlpha(rep > 0 ? 1f : 0.5f);
+        int rc = rep > 0 ? 0xFFFF2445 : off;
+        repBtn.setColorFilter(rc);
+        fRep.setColorFilter(rc);
+        repBtn.setImageResource(rep == 2 ? R.drawable.ic_repeat_one : R.drawable.ic_repeat);
+        fRep.setImageResource(rep == 2 ? R.drawable.ic_repeat_one : R.drawable.ic_repeat);
         repBtn.setBackgroundResource(rep > 0 ? R.drawable.btn_glow_red : R.drawable.btn_circle);
         fRep.setBackgroundResource(rep > 0 ? R.drawable.btn_glow_red : R.drawable.btn_circle);
-        repBtn.setText(rep == 2 ? "🔂" : "🔁");
-        fRep.setText(rep == 2 ? "🔂" : "🔁");
     }
 
     private void syncPlayState(boolean playing, long position, long duration) {
-        String g = playing ? "⏸" : "▶";
-        playBtn.setText(g);
-        fPlay.setText(g);
+        playBtn.setImageResource(playing ? R.drawable.ic_pause : R.drawable.ic_play);
+        fPlay.setImageResource(playing ? R.drawable.ic_pause : R.drawable.ic_play);
         if (duration > 0) {
             bar.setMax((int) duration);
             fBar.setMax((int) duration);

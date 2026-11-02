@@ -134,35 +134,35 @@
                 android:gravity="center_vertical"
                 android:layout_marginTop="20dp">
 
-                <TextView
+                <ImageView
                     android:id="@+id/fprev"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="⏮"
-                    android:textColor="@color/text"
-                    android:textSize="34sp"
-                    android:padding="12dp" />
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:padding="16dp"
+                    android:src="@drawable/ic_prev"
+                    android:tint="@color/text"
+                    android:contentDescription="@string/app_name" />
 
-                <TextView
+                <ImageView
                     android:id="@+id/fplay"
-                    android:layout_width="78dp"
-                    android:layout_height="78dp"
-                    android:layout_marginStart="24dp"
-                    android:layout_marginEnd="24dp"
-                    android:text="▶"
-                    android:textColor="@color/red"
-                    android:textSize="34sp"
-                    android:gravity="center"
-                    android:background="@drawable/btn_glow_red" />
+                    android:layout_width="84dp"
+                    android:layout_height="84dp"
+                    android:layout_marginStart="22dp"
+                    android:layout_marginEnd="22dp"
+                    android:padding="22dp"
+                    android:src="@drawable/ic_play"
+                    android:tint="@color/red"
+                    android:background="@drawable/btn_glow_red"
+                    android:contentDescription="@string/app_name" />
 
-                <TextView
+                <ImageView
                     android:id="@+id/fnext"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="⏭"
-                    android:textColor="@color/text"
-                    android:textSize="34sp"
-                    android:padding="12dp" />
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:padding="16dp"
+                    android:src="@drawable/ic_next"
+                    android:tint="@color/text"
+                    android:contentDescription="@string/app_name" />
             </LinearLayout>
 
             <LinearLayout
@@ -173,26 +173,26 @@
                 android:layout_marginTop="14dp"
                 android:paddingBottom="24dp">
 
-                <TextView
+                <ImageView
                     android:id="@+id/fshuf"
                     android:layout_width="58dp"
                     android:layout_height="58dp"
-                    android:text="🔀"
-                    android:textSize="25sp"
-                    android:gravity="center"
+                    android:padding="15dp"
+                    android:src="@drawable/ic_shuffle"
                     android:background="@drawable/btn_circle"
-                    android:alpha="0.5" />
+                    android:alpha="0.5"
+                    android:contentDescription="@string/app_name" />
 
-                <TextView
+                <ImageView
                     android:id="@+id/frep"
                     android:layout_width="58dp"
                     android:layout_height="58dp"
                     android:layout_marginStart="22dp"
-                    android:text="🔁"
-                    android:textSize="25sp"
-                    android:gravity="center"
+                    android:padding="15dp"
+                    android:src="@drawable/ic_repeat"
                     android:background="@drawable/btn_circle"
-                    android:alpha="0.5" />
+                    android:alpha="0.5"
+                    android:contentDescription="@string/app_name" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

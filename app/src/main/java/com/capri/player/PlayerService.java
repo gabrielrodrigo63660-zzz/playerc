@@ -18,7 +18,10 @@ import android.os.IBinder;
 import android.os.Looper;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
+import java.util.Set;
 
 public class PlayerService extends Service {
 
@@ -41,6 +44,7 @@ public class PlayerService extends Service {
     private MediaPlayer mp;
     private List<Track> queue = Collections.emptyList();
     private int idx = -1;
+    private final Set<Long> played = new HashSet<Long>();
     private MediaSession session;
     private boolean shuf = false;
     private int rep = 0; // 0 off, 1 all, 2 one
@@ -88,6 +92,7 @@ public class PlayerService extends Service {
     public void playQueue(List<Track> q, int start) {
         queue = q;
         idx = start;
+        played.clear();
         playInternal();
     }
 
@@ -110,8 +115,67 @@ public class PlayerService extends Service {
 
     public void next() {
         if (queue.isEmpty()) return;
-        if (idx + 1 < queue.size()) idx++;
-        else if (rep == 1) idx = 0;
+        if (shuf && queue.size() > 1) {
+            pickRandomTrack(true);
+        } else {
+            idx = (idx + 1) % queue.size();
+            playInternal();
+        }
+    }
+
+    /** chamado automaticamente quando a musica acaba */
+    private void nextInternal() {
+        if (queue.isEmpty()) return;
+        if (shuf && queue.size() > 1) {
+            if (hasUnplayed()) {
+                pickRandomTrack(false);
+            } else if (rep == 1) {
+                played.clear();
+                pickRandomTrack(false);
+            }
+            // rep==0 e tudo ja tocado -> para em silencio
+            return;
+        }
+        if (idx + 1 < queue.size()) {
+            idx++;
+            playInternal();
+        } else if (rep == 1) {
+            idx = 0;
+            playInternal();
+        } else {
+            pushState(); // fim da fila
+        }
+    }
+
+    private boolean hasUnplayed() {
+        for (Track t : queue) {
+            if (!played.contains(t.id)) return true;
+        }
+        return false;
+    }
+
+    private void pickRandomTrack(boolean manual) {
+        int size = queue.size();
+        if (size == 0) return;
+        Random rnd = new Random();
+        int cand = idx;
+        boolean found = false;
+        for (int i = 0; i < 300; i++) {
+            int r = rnd.nextInt(size);
+            if (!played.contains(queue.get(r).id)) {
+                cand = r;
+                found = true;
+                break;
+            }
+        }
+        if (manual) played.clear();
+        if (!found) {
+            if (!manual) { pushState(); return; }
+            if (size > 1) {
+                do { cand = rnd.nextInt(size); } while (cand == idx);
+            }
+        }
+        idx = cand;
         playInternal();
     }
 
@@ -153,6 +217,7 @@ public class PlayerService extends Service {
     private void playInternal() {
         if (idx < 0 || idx >= queue.size()) return;
         final Track t = queue.get(idx);
+        played.add(t.id);
 
         try {
             startForeground(NOTI_ID, noti(t.title, "Carregando…", null));
@@ -176,8 +241,8 @@ public class PlayerService extends Service {
                         mp1.seekTo(0);
                         mp1.start();
                         pushState();
-                    } else if (idx + 1 < queue.size() || rep == 1) {
-                        main.post(() -> next());
+                    } else {
+                        main.post(() -> nextInternal());
                     }
                 });
                 final Listener l = listener;
