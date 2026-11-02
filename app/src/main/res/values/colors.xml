@@ -4,9 +4,11 @@
     <color name="panel">#FF121216</color>
     <color name="panel2">#FF17171D</color>
     <color name="red">#FFFF2445</color>
+    <color name="red_dim">#66FF2445</color>
     <color name="green">#FF3DFF5E</color>
-    <color name="text">#FFECECF1</color>
+    <color name="green_dim">#663DFF5E</color>
+    <color name="text">#FFF1F1F5</color>
     <color name="muted">#FF9A9AA6</color>
-    <color name="line">#FF232329</color>
+    <color name="line">#FF2B2B33</color>
     <color name="launcher_bg">#FF0A0A0C</color>
 </resources>

@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
+                android:paddingTop="18dp">
+
+                <TextView
+                    android:id="@+id/fclose"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⌄"
+                    android:textColor="@color/muted"
+                    android:textSize="34sp"
+                    android:padding="4dp" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/now_playing"
+                    android:textColor="@color/red"
+                    android:textSize="13sp"
+                    android:letterSpacing="0.2"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/fart"
+                android:layout_width="280dp"
+                android:layout_height="280dp"
+                android:layout_marginTop="26dp"
+                android:background="@drawable/art_glow"
+                android:scaleType="centerCrop"
+                android:padding="2dp"
+                android:contentDescription="@string/app_name" />
+
+            <TextView
+                android:id="@+id/fnt1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                android:gravity="center"
+                android:textColor="@color/text"
+                android:textSize="25sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:shadowColor="@color/red"
+                android:shadowDx="0"
+                android:shadowDy="0"
+                android:shadowRadius="14" />
+
+            <TextView
+                android:id="@+id/fnt2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                android:gravity="center"
+                android:textColor="@color/muted"
+                android:textSize="15sp"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="22dp"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp">
+
+                <TextView
+                    android:id="@+id/fcur"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0:00"
+                    android:textColor="@color/muted"
+                    android:textSize="12sp"
+                    android:minWidth="40dp"
+                    android:gravity="center" />
+
+                <SeekBar
+                    android:id="@+id/fseek"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:progressTint="@color/red"
+                    android:thumbTint="@color/red"
+                    android:backgroundTint="@color/line" />
+
+                <TextView
+                    android:id="@+id/fdur"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0:00"
+                    android:textColor="@color/muted"
+                    android:textSize="12sp"
+                    android:minWidth="40dp"
+                    android:gravity="center" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="20dp">
+
+                <TextView
+                    android:id="@+id/fprev"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⏮"
+                    android:textColor="@color/text"
+                    android:textSize="34sp"
+                    android:padding="12dp" />
+
+                <TextView
+                    android:id="@+id/fplay"
+                    android:layout_width="78dp"
+                    android:layout_height="78dp"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginEnd="24dp"
+                    android:text="▶"
+                    android:textColor="@color/red"
+                    android:textSize="34sp"
+                    android:gravity="center"
+                    android:background="@drawable/btn_glow_red" />
+
+                <TextView
+                    android:id="@+id/fnext"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⏭"
+                    android:textColor="@color/text"
+                    android:textSize="34sp"
+                    android:padding="12dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="14dp"
+                android:paddingBottom="24dp">
+
+                <TextView
+                    android:id="@+id/fshuf"
+                    android:layout_width="58dp"
+                    android:layout_height="58dp"
+                    android:text="🔀"
+                    android:textSize="25sp"
+                    android:gravity="center"
+                    android:background="@drawable/btn_circle"
+                    android:alpha="0.5" />
+
+                <TextView
+                    android:id="@+id/frep"
+                    android:layout_width="58dp"
+                    android:layout_height="58dp"
+                    android:layout_marginStart="22dp"
+                    android:text="🔁"
+                    android:textSize="25sp"
+                    android:gravity="center"
+                    android:background="@drawable/btn_circle"
+                    android:alpha="0.5" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/scanlines"
+        android:alpha="0.08"
+        android:clickable="false"
+        android:focusable="false" />
+</FrameLayout>

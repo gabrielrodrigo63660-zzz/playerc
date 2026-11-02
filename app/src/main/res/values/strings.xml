@@ -3,4 +3,21 @@
     <string name="app_name">Capri Player</string>
     <string name="logo">CAPRI PLAYER</string>
     <string name="hint_search">Buscar música, artista, álbum…</string>
+    <string name="now_playing">TOCANDO AGORA</string>
+    <string name="tab_all">Todas</string>
+    <string name="tab_artists">Artistas</string>
+    <string name="tab_albums">Álbuns</string>
+    <string name="tab_top">🔥 Mais ouvidas</string>
+    <string name="tab_more">📥 Recentes</string>
+    <string name="unknown_artist">Artista desconhecido</string>
+    <string name="unknown_album">(soltas)</string>
+
+    <string-array name="sort_names">
+        <item>Título (A → Z)</item>
+        <item>Artista (A → Z)</item>
+        <item>Álbum (A → Z)</item>
+        <item>Mais recentes primeiro (data)</item>
+        <item>Maiores primeiro (MB)</item>
+        <item>Mais tocadas primeiro</item>
+    </string-array>
 </resources>

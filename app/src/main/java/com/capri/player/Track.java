@@ -10,6 +10,8 @@ public class Track implements Parcelable {
     public String album;
     public String data;
     public long duration;
+    public long dateAdded;
+    public long size;
 
     public Track() {}
 
@@ -20,6 +22,8 @@ public class Track implements Parcelable {
         album = in.readString();
         data = in.readString();
         duration = in.readLong();
+        dateAdded = in.readLong();
+        size = in.readLong();
     }
 
     @Override
@@ -30,6 +34,8 @@ public class Track implements Parcelable {
         dest.writeString(album);
         dest.writeString(data);
         dest.writeLong(duration);
+        dest.writeLong(dateAdded);
+        dest.writeLong(size);
     }
 
     @Override

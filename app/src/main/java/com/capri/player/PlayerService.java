@@ -23,7 +23,7 @@ import java.util.List;
 public class PlayerService extends Service {
 
     public interface Listener {
-        void onTrack(String title, String artist, long duration, String path);
+        void onTrack(long trackId, String title, String artist, long duration, String path);
         void onPlayState(boolean playing, long position, long duration);
     }
 
@@ -183,7 +183,7 @@ public class PlayerService extends Service {
                 final Listener l = listener;
                 main.post(() -> {
                     if (l != null)
-                        l.onTrack(t.title, t.artist, t.duration, t.data);
+                        l.onTrack(t.id, t.title, t.artist, t.duration, t.data);
                 });
                 mp.setOnPreparedListener(mp1 -> {
                     mp1.start();
