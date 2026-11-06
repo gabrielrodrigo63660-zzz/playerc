@@ -20,11 +20,15 @@
             android:paddingTop="16dp"
             android:gravity="center_vertical">
 
-            <!-- logo com glitch -->
+            <!-- logo com glitch (sticker de papel estilo PRIMA) -->
             <FrameLayout
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1">
+                android:background="@drawable/chip_paper"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp">
 
                 <TextView
                     android:id="@+id/logoG1"
@@ -53,7 +57,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/logo"
-                    android:textColor="@color/text"
+                    android:textColor="@color/bg"
                     android:textStyle="bold"
                     android:textSize="21sp"
                     android:letterSpacing="0.14"
@@ -62,6 +66,11 @@
                     android:shadowDy="0"
                     android:shadowRadius="10" />
             </FrameLayout>
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
 
             <ImageView
                 android:layout_width="22dp"
@@ -412,4 +421,9 @@
     <include
         layout="@layout/full_now"
         android:id="@+id/fullRoot" />
+
+    <!-- ============ SPLASH DE ABERTURA ============ -->
+    <include
+        layout="@layout/splash_layer"
+        android:id="@+id/splashRoot" />
 </FrameLayout>

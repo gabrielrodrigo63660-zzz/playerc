@@ -10,7 +10,7 @@ import android.graphics.SweepGradient;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.view.View;
-import android.view.animation.DecelerateInterpolator;
+import android.view.animation.FastOutSlowInInterpolator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +41,7 @@ public class Y2kBgView extends View {
     private static class Item {
         int type;
         float x, y, s, rot;
+        float ph, wa;      // fase e amplitude do wobble
         int color;
         SweepGradient grad;
         String txt;
@@ -51,9 +52,14 @@ public class Y2kBgView extends View {
 
     private List<Item> items = new ArrayList<>();
     private List<Item> oldItems;   // grupo saindo ("arrastado") na transicao
-    private android.animation.ValueAnimator slide;
+    private ValueAnimator slide;
     private float prog = 1f;
     private float panDx, panDy;
+
+    // wobble suave — stickers balançam enquanto a musica toca
+    private ValueAnimator wobble;
+    private float wobT;
+    private float amp, ampTarget;
 
     private long seed = 0x5EEDL;
 
@@ -81,6 +87,22 @@ public class Y2kBgView extends View {
         slideIn();
     }
 
+    /** wobble ligado = tocando; desligado ease-out pra zero */
+    public void setWobble(boolean on) {
+        ampTarget = on ? 1f : 0f;
+        if (wobble != null) return;
+        wobble = ValueAnimator.ofFloat(0f, 1f);
+        wobble.setDuration(4200);
+        wobble.setRepeatCount(ValueAnimator.INFINITE);
+        wobble.setInterpolator(null); // linear: a onda e continua
+        wobble.addUpdateListener(a -> {
+            wobT = (Float) a.getAnimatedValue() * (float) Math.PI * 2f;
+            amp += (ampTarget - amp) * 0.055f;
+            if (amp > 0.015f || ampTarget > 0f) invalidate();
+        });
+        wobble.start();
+    }
+
     @Override
     protected void onSizeChanged(int w, int h, int ow, int oh) {
         super.onSizeChanged(w, h, ow, oh);
@@ -103,8 +125,8 @@ public class Y2kBgView extends View {
         prog = 0f;
         if (slide != null) slide.cancel();
         slide = ValueAnimator.ofFloat(0f, 1f);
-        slide.setDuration(640);
-        slide.setInterpolator(new DecelerateInterpolator());
+        slide.setDuration(940);
+        slide.setInterpolator(new FastOutSlowInInterpolator());
         slide.addUpdateListener(a -> {
             prog = (Float) a.getAnimatedValue();
             if (prog >= 1f && oldItems != null) oldItems = null;
@@ -128,6 +150,9 @@ public class Y2kBgView extends View {
             it.s = (16 + r.nextFloat() * 36) * (w / 420f);
             if (it.s < 10) it.s = 10;
             it.rot = r.nextFloat() * 360f;
+            it.ph = r.nextFloat() * 6.2832f;
+            it.wa = (2.5f + r.nextFloat() * 3.5f) * getContext().getResources()
+                    .getDisplayMetrics().density;
             float cor = r.nextFloat();
             if (cor < 0.55f) it.color = cMain;
             else if (cor < 0.85f) it.color = cSec;
@@ -236,6 +261,12 @@ public class Y2kBgView extends View {
             }
 
             canvas.save();
+            if (amp > 0.01f && it.wa > 0) {
+                canvas.translate(
+                        (float) Math.sin(wobT + it.ph) * it.wa * amp,
+                        (float) Math.cos(wobT * 1.31f + it.ph * 1.17f)
+                                * it.wa * 0.7f * amp);
+            }
             canvas.rotate(it.rot, it.x, it.y);
             switch (it.type) {
                 case T_STAR: {

@@ -4,10 +4,39 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- olhos da Capri: dois cortes neon inclinados, com glints verde -->
     <path
-        android:fillColor="@color/red"
-        android:pathData="M34,74 L54,20 L74,74 Z" />
+        android:strokeColor="#FFFF2445"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:pathData="M33,58 L52,67" />
     <path
-        android:fillColor="@color/green"
-        android:pathData="M42,80 L66,80 L66,88 L42,88 Z" />
+        android:strokeColor="#FFFF2445"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:pathData="M56,67 L75,58" />
+    <path
+        android:strokeColor="#B33DFF5E"
+        android:strokeWidth="2.6"
+        android:strokeLineCap="round"
+        android:pathData="M34.5,66.5 L51.5,74" />
+    <path
+        android:strokeColor="#B33DFF5E"
+        android:strokeWidth="2.6"
+        android:strokeLineCap="round"
+        android:pathData="M56.5,74 L73.5,66.5" />
+    <!-- pontos de luz -->
+    <path
+        android:fillColor="#F2F2F7"
+        android:pathData="M37,55.5 a2.2,2.2 0 1 0 0.001,0 Z" />
+    <path
+        android:fillColor="#F2F2F7"
+        android:pathData="M71,55.5 a2.2,2.2 0 1 0 0.001,0 Z" />
+    <!-- estrelinhas -->
+    <path
+        android:fillColor="#993DFF5E"
+        android:pathData="M78,36 L80,41 78,46 76,41 Z" />
+    <path
+        android:fillColor="#99FF2445"
+        android:pathData="M40,30 L42,34 40,38 38,34 Z" />
 </vector>

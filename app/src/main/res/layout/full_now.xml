@@ -79,25 +79,27 @@
                 android:background="@drawable/art_glow"
                 android:scaleType="centerCrop"
                 android:padding="2dp"
+                android:clipToOutline="true"
                 android:contentDescription="@string/app_name" />
 
             <TextView
                 android:id="@+id/fnt1"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:layout_marginStart="24dp"
                 android:layout_marginEnd="24dp"
+                android:background="@drawable/chip_paper"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
                 android:gravity="center"
-                android:textColor="@color/text"
-                android:textSize="25sp"
+                android:textColor="@color/bg"
+                android:textSize="24sp"
                 android:textStyle="bold"
                 android:maxLines="1"
-                android:ellipsize="end"
-                android:shadowColor="@color/red"
-                android:shadowDx="0"
-                android:shadowDy="0"
-                android:shadowRadius="14" />
+                android:ellipsize="end" />
 
             <TextView
                 android:id="@+id/fnt2"

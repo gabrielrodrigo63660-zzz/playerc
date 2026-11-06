@@ -10,8 +10,11 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -65,7 +68,12 @@ public class MainActivity extends Activity {
     private SeekBar bar, fBar;
     private View nowBar, fullRoot;
     private Y2kBgView bgseed, mainseed;
-    private ValueAnimator pulse;
+    private View splashRoot;
+    private ImageView splashEye;
+
+    // paleta atual (vem da capa; fallback padrao do app)
+    private int palMain = 0xFFFF2445;
+    private int palSec = 0xFF3DFF5E;
 
     // gestos na capa
     private float dragStartX;
@@ -127,12 +135,15 @@ public class MainActivity extends Activity {
                     runOnUiThread(() -> {
                         if (p.equals(nArt.getTag())) nArt.setImageBitmap(b);
                         if (p.equals(fArt.getTag())) fArt.setImageBitmap(b);
-                        // paleta dos stickers = cores da capa
+                        // paleta dos stickers + botoes da tela cheia = cores da capa
                         int[] pal = (b == null)
                                 ? new int[]{0xFFFF2445, 0xFF3DFF5E}
                                 : extractPalette(b);
+                        palMain = pal[0];
+                        palSec = pal[1];
                         bgseed.setPalette(pal[0], pal[1]);
                         mainseed.setPalette(pal[0], pal[1]);
+                        refreshToggles();
                     });
                 }).start();
                 nArt.setTag(path);
@@ -209,6 +220,8 @@ public class MainActivity extends Activity {
         bgseed = findViewById(R.id.bgseed);
         mainseed = findViewById(R.id.mainseed);
         fSeed = findViewById(R.id.fseed);
+        splashRoot = findViewById(R.id.splashRoot);
+        splashEye = findViewById(R.id.splashEye);
         tabAll = findViewById(R.id.tabAll);
         tabArtist = findViewById(R.id.tabArtist);
         tabAlbum = findViewById(R.id.tabAlbum);
@@ -331,6 +344,9 @@ public class MainActivity extends Activity {
         applyGridVisibility();
         askPerms();
         immersive();
+
+        refreshFullscreenTint();
+        runSplash();
     }
 
     private boolean folderOn() {
@@ -366,23 +382,24 @@ public class MainActivity extends Activity {
         int rep = srv.getRepeat();
         int off = 0xFF9A9AA6;
 
+        // mini bar (lista) - cores padrao do app
         shufBtn.setAlpha(shuf ? 1f : 0.45f);
-        fShuf.setAlpha(shuf ? 1f : 0.5f);
-        int sc = shuf ? 0xFF3DFF5E : off;
-        shufBtn.setColorFilter(sc);
-        fShuf.setColorFilter(sc);
+        shufBtn.setColorFilter(shuf ? 0xFF3DFF5E : off);
         shufBtn.setBackgroundResource(shuf ? R.drawable.btn_glow_green : R.drawable.btn_circle);
-        fShuf.setBackgroundResource(shuf ? R.drawable.btn_glow_green : R.drawable.btn_circle);
-
         repBtn.setAlpha(rep > 0 ? 1f : 0.45f);
-        fRep.setAlpha(rep > 0 ? 1f : 0.5f);
-        int rc = rep > 0 ? 0xFFFF2445 : off;
-        repBtn.setColorFilter(rc);
-        fRep.setColorFilter(rc);
         repBtn.setImageResource(rep == 2 ? R.drawable.ic_repeat_one : R.drawable.ic_repeat);
-        fRep.setImageResource(rep == 2 ? R.drawable.ic_repeat_one : R.drawable.ic_repeat);
+        repBtn.setColorFilter(rep > 0 ? 0xFFFF2445 : off);
         repBtn.setBackgroundResource(rep > 0 ? R.drawable.btn_glow_red : R.drawable.btn_circle);
-        fRep.setBackgroundResource(rep > 0 ? R.drawable.btn_glow_red : R.drawable.btn_circle);
+
+        // tela cheia - botoes pegam a cor da capa
+        fShuf.setAlpha(shuf ? 1f : 0.5f);
+        fShuf.setColorFilter(shuf ? palSec : off);
+        fShuf.setBackgroundResource(shuf ? glowOval(palSec) : R.drawable.btn_circle);
+        fRep.setAlpha(rep > 0 ? 1f : 0.5f);
+        fRep.setImageResource(rep == 2 ? R.drawable.ic_repeat_one : R.drawable.ic_repeat);
+        fRep.setColorFilter(rep > 0 ? palMain : off);
+        fRep.setBackgroundResource(rep > 0 ? glowOval(palMain) : R.drawable.btn_circle);
+        refreshFullscreenTint();
     }
 
     private void syncPlayState(boolean playing, long position, long duration) {
@@ -398,7 +415,8 @@ public class MainActivity extends Activity {
         fCur.setText(fmt(position));
         dur.setText(fmt(duration));
         fDur.setText(fmt(duration));
-        if (playing) startPulse(); else stopPulse();
+        bgseed.setWobble(playing);
+        mainseed.setWobble(playing);
     }
 
     private void playFromRelative(int dir) {
@@ -408,6 +426,27 @@ public class MainActivity extends Activity {
 
     private void showFull(boolean open) {
         fullRoot.setVisibility(open ? View.VISIBLE : View.GONE);
+    }
+
+    // ------------------ splash de abertura (olhos piscando) ------------------
+
+    private void runSplash() {
+        if (splashRoot == null) return;
+        splashRoot.setVisibility(View.VISIBLE);
+        splashRoot.setAlpha(1f);
+        ValueAnimator blink = ValueAnimator.ofFloat(1f, 0.06f, 1f, 1f, 0.06f, 1f);
+        blink.setDuration(760);
+        blink.addUpdateListener(a -> {
+            float s = (Float) a.getAnimatedValue();
+            splashEye.setScaleY(s);
+            splashEye.setScaleX(0.94f + 0.06f * s);
+        });
+        blink.start();
+        splashRoot.postDelayed(() -> splashRoot
+                        .animate().alpha(0f).setDuration(340)
+                        .withEndAction(() -> splashRoot.setVisibility(View.GONE))
+                        .start(),
+                900);
     }
 
     private void playAt(List<Track> q, int position) {
@@ -672,28 +711,54 @@ public class MainActivity extends Activity {
         }
     };
 
-    /** capa pulsando tipo batida enquanto toca */
-    private void startPulse() {
-        if (pulse != null) return;
-        pulse = ValueAnimator.ofFloat(1f, 1.035f, 1f);
-        pulse.setDuration(900);
-        pulse.setRepeatCount(ValueAnimator.INFINITE);
-        pulse.setRepeatMode(ValueAnimator.REVERSE);
-        pulse.addUpdateListener(a -> {
-            float s = (Float) a.getAnimatedValue();
-            fArt.setScaleX(s);
-            fArt.setScaleY(s);
-        });
-        pulse.start();
+    // ------------------ paleta nos botoes da tela cheia ------------------
+
+    /** recolore play/seekbar/anel da capa com a cor da capa (só fullscreen) */
+    private void refreshFullscreenTint() {
+        fPlay.setColorFilter(palMain);
+        fPlay.setBackground(artRing(palMain));
+        fBar.setProgressTintList(ColorStateList.valueOf(palMain));
+        fBar.setThumbTintList(ColorStateList.valueOf(palMain));
     }
 
-    private void stopPulse() {
-        if (pulse != null) {
-            pulse.cancel();
-            pulse = null;
-        }
-        fArt.setScaleX(1f);
-        fArt.setScaleY(1f);
+    /** anel redondo com glow — moldura da capa (fornece outline p/ clip) */
+    private android.graphics.drawable.Drawable artRing(int core) {
+        float d = getResources().getDisplayMetrics().density;
+        GradientDrawable outer = new GradientDrawable();
+        outer.setShape(GradientDrawable.RECTANGLE);
+        outer.setCornerRadius(28 * d);
+        outer.setStroke((int) (8 * d), ringColor(core));
+        GradientDrawable inner = new GradientDrawable();
+        inner.setShape(GradientDrawable.RECTANGLE);
+        inner.setCornerRadius(26 * d);
+        inner.setColor(0xFF17171D);
+        inner.setStroke((int) (2 * d), core);
+        LayerDrawable ld = new LayerDrawable(
+                new android.graphics.drawable.Drawable[]{outer, inner});
+        int in = (int) (2 * d);
+        ld.setLayerInset(1, in, in, in, in);
+        return ld;
+    }
+
+    /** brilho oval nos botoes circulares da tela cheia */
+    private android.graphics.drawable.Drawable glowOval(int core) {
+        float d = getResources().getDisplayMetrics().density;
+        GradientDrawable outer = new GradientDrawable();
+        outer.setShape(GradientDrawable.OVAL);
+        outer.setStroke((int) (5 * d), ringColor(core));
+        GradientDrawable inner = new GradientDrawable();
+        inner.setShape(GradientDrawable.OVAL);
+        inner.setColor(0xFF17171D);
+        inner.setStroke((int) (2 * d), core);
+        LayerDrawable ld = new LayerDrawable(
+                new android.graphics.drawable.Drawable[]{outer, inner});
+        int in = (int) (2 * d);
+        ld.setLayerInset(1, in, in, in, in);
+        return ld;
+    }
+
+    private static int ringColor(int core) {
+        return (shadeColor(core, 0.45f) & 0x00FFFFFF) | 0x66000000;
     }
 
     private void showEqDialog() {
@@ -890,7 +955,6 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-        if (pulse != null) { pulse.cancel(); pulse = null; }
         if (bound) { unbindService(conn); bound = false; }
         super.onDestroy();
     }
