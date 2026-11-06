@@ -75,11 +75,6 @@ public class MainActivity extends Activity {
     private long lastTapAt;
     private boolean lastTapSide;
 
-    private final Runnable pendingTap = () -> {
-        if (srv != null) srv.toggle();
-        lastTapAt = 0;
-    };
-
     private List<Track> all = new ArrayList<>();
     private final List<Object[]> groups = new ArrayList<>(); // {String name, Long count, String path}
     private List<Track> currentList = new ArrayList<>();
@@ -90,6 +85,11 @@ public class MainActivity extends Activity {
 
     private PlayerService srv;
     private boolean bound, fullscreenOn = true;
+
+    private final Runnable pendingTap = () -> {
+        if (srv != null) srv.toggle();
+        lastTapAt = 0;
+    };
     private int curTab = TAB_ALL;
     private String openGroup = null;
     private String lastArtPath = "";
