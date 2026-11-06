@@ -1,6 +1,7 @@
 package com.capri.player;
 
 import android.Manifest;
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;
@@ -56,11 +57,14 @@ public class MainActivity extends Activity {
     private TextView fTitle, fArtist, fCur, fDur;
     private ImageView playBtn, shufBtn, repBtn, prevB, nextB;
     private ImageView fPlay, fPrev, fNext, fShuf, fRep;
-    private TextView btnSort, btnGrid;
+    private TextView btnSort, btnGrid, btnEQ, fSeed;
+    private TextView logoG1, logoG2, logoC;
     private TextView tabAll, tabArtist, tabAlbum, tabTop;
     private ImageView nArt, fArt;
     private SeekBar bar, fBar;
     private View nowBar, fullRoot;
+    private Y2kBgView bgseed;
+    private ValueAnimator pulse;
 
     private List<Track> all = new ArrayList<>();
     private final List<Object[]> groups = new ArrayList<>(); // {String name, Long count, String path}
@@ -78,6 +82,7 @@ public class MainActivity extends Activity {
 
     private SharedPreferences prefs, plays;
     private final Handler tick = new Handler();
+    private final Handler glitchTick = new Handler();
 
     private final PlayerService.Listener listener = new PlayerService.Listener() {
         @Override public void onTrack(long trackId, String title, String artist, long duration, String path) {
@@ -93,6 +98,11 @@ public class MainActivity extends Activity {
             int c = plays.getInt(key, 0) + 1;
             plays.edit().putInt(key, c).apply();
             if (curTab == TAB_TOP) rebuildRows();
+
+            // fundo Y2K troca de "identidade" + glitch no logo
+            bgseed.setSeed(trackId);
+            fSeed.setText(String.format(Locale.ROOT, "seed://0x%08X", trackId));
+            glitchBurst();
 
             if (path != null && !path.equals(lastArtPath)) {
                 lastArtPath = path;
@@ -171,6 +181,12 @@ public class MainActivity extends Activity {
         fRep = findViewById(R.id.frep);
         btnSort = findViewById(R.id.btnSort);
         btnGrid = findViewById(R.id.btnGrid);
+        btnEQ = findViewById(R.id.btnEQ);
+        logoG1 = findViewById(R.id.logoG1);
+        logoG2 = findViewById(R.id.logoG2);
+        logoC = findViewById(R.id.logoC);
+        bgseed = findViewById(R.id.bgseed);
+        fSeed = findViewById(R.id.fseed);
         tabAll = findViewById(R.id.tabAll);
         tabArtist = findViewById(R.id.tabArtist);
         tabAlbum = findViewById(R.id.tabAlbum);
@@ -266,6 +282,10 @@ public class MainActivity extends Activity {
             Toast.makeText(this, g ? "Grade ON" : "Lista ON", Toast.LENGTH_SHORT).show();
         });
 
+        btnEQ.setOnClickListener(v -> showEqDialog());
+        bgseed.setSeed(0x5EEDL);
+        startGlitchLoop();
+
         nArt.setOnClickListener(v -> showFull(true));
         fArt.setOnClickListener(v -> { if (srv != null) srv.toggle(); });
         findViewById(R.id.openfull).setOnClickListener(v -> showFull(true));
@@ -355,6 +375,7 @@ public class MainActivity extends Activity {
         fCur.setText(fmt(position));
         dur.setText(fmt(duration));
         fDur.setText(fmt(duration));
+        if (playing) startPulse(); else stopPulse();
     }
 
     private void playFromRelative(int dir) {
@@ -494,6 +515,146 @@ public class MainActivity extends Activity {
                 .show();
     }
 
+    // ------------------ y2k + equalizer ------------------
+
+    private static String fmtDb(int mB) {
+        return (mB >= 0 ? "+" : "") + (mB / 100) + " dB";
+    }
+
+    private void startGlitchLoop() {
+        glitchTick.postDelayed(new Runnable() {
+            @Override public void run() {
+                if (srv != null && srv.isPlaying()) glitchBurst();
+                glitchTick.postDelayed(this, 1500 + (long) (Math.random() * 2600));
+            }
+        }, 2200);
+    }
+
+    private void glitchBurst() {
+        float d = getResources().getDisplayMetrics().density;
+        float b = 3.0f * d;
+        logoG1.setTranslationX(-(b + (float) (Math.random() * b)));
+        logoG2.setTranslationX(2.5f * d + (float) (Math.random() * b));
+        logoC.setShadowLayer(6 + (float) (Math.random() * 12), 0, 0, 0xFFFF2445);
+        glitchTick.postDelayed(glitchReset, 130);
+    }
+
+    private final Runnable glitchReset = new Runnable() {
+        @Override public void run() {
+            float d = getResources().getDisplayMetrics().density;
+            logoG1.setTranslationX(-2.5f * d);
+            logoG2.setTranslationX(2.5f * d);
+            logoC.setShadowLayer(10, 0, 0, 0xFFFF2445);
+        }
+    };
+
+    /** capa pulsando tipo batida enquanto toca */
+    private void startPulse() {
+        if (pulse != null) return;
+        pulse = ValueAnimator.ofFloat(1f, 1.035f, 1f);
+        pulse.setDuration(900);
+        pulse.setRepeatCount(ValueAnimator.INFINITE);
+        pulse.setRepeatMode(ValueAnimator.REVERSE);
+        pulse.addUpdateListener(a -> {
+            float s = (Float) a.getAnimatedValue();
+            fArt.setScaleX(s);
+            fArt.setScaleY(s);
+        });
+        pulse.start();
+    }
+
+    private void stopPulse() {
+        if (pulse != null) {
+            pulse.cancel();
+            pulse = null;
+        }
+        fArt.setScaleX(1f);
+        fArt.setScaleY(1f);
+    }
+
+    private void showEqDialog() {
+        final SharedPreferences ep = getSharedPreferences("eq", MODE_PRIVATE);
+        View v = LayoutInflater.from(this).inflate(R.layout.dialog_eq, null);
+
+        final SeekBar[] sbs = {
+                (SeekBar) v.findViewById(R.id.eqS0),
+                (SeekBar) v.findViewById(R.id.eqS1),
+                (SeekBar) v.findViewById(R.id.eqS2),
+                (SeekBar) v.findViewById(R.id.eqS3),
+                (SeekBar) v.findViewById(R.id.eqS4)
+        };
+        final TextView[] labs = {
+                (TextView) v.findViewById(R.id.eqL0),
+                (TextView) v.findViewById(R.id.eqL1),
+                (TextView) v.findViewById(R.id.eqL2),
+                (TextView) v.findViewById(R.id.eqL3),
+                (TextView) v.findViewById(R.id.eqL4)
+        };
+
+        for (int b = 0; b < 5; b++) {
+            final int band = b;
+            int mb = ep.getInt("band" + b, 0);
+            sbs[b].setProgress(Math.max(0, Math.min(30, (mb / 100) + 15)));
+            labs[b].setText(fmtDb(mb));
+            sbs[b].setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override public void onProgressChanged(SeekBar sb, int pr, boolean fromUser) {
+                    if (!fromUser) return;
+                    int mB = (pr - 15) * 100;
+                    labs[band].setText(fmtDb(mB));
+                    ep.edit().putInt("band" + band, mB).apply();
+                    if (srv != null) srv.applyEq();
+                }
+                @Override public void onStartTrackingTouch(SeekBar sb) {}
+                @Override public void onStopTrackingTouch(SeekBar sb) {}
+            });
+        }
+
+        final TextView eqOn = (TextView) v.findViewById(R.id.eqOn);
+        final boolean[] onState = {ep.getBoolean("on", true)};
+        Runnable paintOn = new Runnable() {
+            @Override public void run() {
+                eqOn.setText(onState[0] ? "EQ ON" : "EQ OFF");
+                eqOn.setBackgroundResource(onState[0]
+                        ? R.drawable.chip_green : R.drawable.chip_red);
+            }
+        };
+        paintOn.run();
+        eqOn.setOnClickListener(ve -> {
+            onState[0] = !onState[0];
+            ep.edit().putBoolean("on", onState[0]).apply();
+            paintOn.run();
+            if (srv != null) srv.applyEq();
+        });
+
+        final int[][] presets = {
+                {0, 0, 0, 0, 0},      // Plano
+                {9, 6, 2, 0, -1},     // Baixo
+                {5, 3, -2, 3, 5},     // Rock
+                {-1, 4, 4, 2, -1},    // Pop
+                {-3, 0, 4, 5, 2}      // Voz
+        };
+        int[] pid = {R.id.eqP0, R.id.eqP1, R.id.eqP2, R.id.eqP3, R.id.eqP4};
+        for (int i = 0; i < pid.length; i++) {
+            final int pi = i;
+            v.findViewById(pid[i]).setOnClickListener(ve -> {
+                for (int b = 0; b < 5; b++) {
+                    int mB = presets[pi][b] * 100;
+                    sbs[b].setProgress(mB / 100 + 15);
+                    labs[b].setText(fmtDb(mB));
+                    ep.edit().putInt("band" + b, mB).apply();
+                }
+                if (srv != null) srv.applyEq();
+            });
+        }
+
+        AlertDialog dlg = new AlertDialog.Builder(this).setView(v).create();
+        dlg.show();
+        try {
+            dlg.getWindow().setBackgroundDrawable(
+                    new android.graphics.drawable.ColorDrawable(0x00000000));
+        } catch (Throwable ignored) {}
+    }
+
     private void immersive() {
         getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
@@ -605,6 +766,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (pulse != null) { pulse.cancel(); pulse = null; }
         if (bound) { unbindService(conn); bound = false; }
         super.onDestroy();
     }

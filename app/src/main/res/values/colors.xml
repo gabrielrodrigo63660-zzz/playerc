@@ -10,5 +10,9 @@
     <color name="text">#FFF1F1F5</color>
     <color name="muted">#FF9A9AA6</color>
     <color name="line">#FF2B2B33</color>
+    <color name="smoke">#FF7A7A8A</color>
+    <color name="silver">#FFE8E8F0</color>
+    <color name="red_deep">#FF61091C</color>
+    <color name="green_deep">#FF166832</color>
     <color name="launcher_bg">#FF0A0A0C</color>
 </resources>

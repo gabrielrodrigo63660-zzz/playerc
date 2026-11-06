@@ -10,6 +10,7 @@ import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaMetadata;
 import android.media.MediaPlayer;
+import android.media.audiofx.Equalizer;
 import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
 import android.os.Binder;
@@ -46,6 +47,7 @@ public class PlayerService extends Service {
     private int idx = -1;
     private final Set<Long> played = new HashSet<Long>();
     private MediaSession session;
+    private Equalizer eq;
     private boolean shuf = false;
     private int rep = 0; // 0 off, 1 all, 2 one
 
@@ -212,6 +214,42 @@ public class PlayerService extends Service {
 
     public int getIndex() { return idx; }
 
+    // ---------- equalizador ----------
+
+    private void attachEq(MediaPlayer m) {
+        try {
+            if (eq != null) {
+                eq.release();
+                eq = null;
+            }
+        } catch (Throwable ignored) {}
+        try {
+            eq = new Equalizer(0, m.getAudioSessionId());
+            applyEq();
+        } catch (Throwable ignore) {
+            eq = null;
+        }
+    }
+
+    /** reaplica as bandas salvas — a Activity chama quando o usuario mexe no EQ */
+    public void applyEq() {
+        try {
+            if (eq == null) return;
+            android.content.SharedPreferences p =
+                    getSharedPreferences("eq", MODE_PRIVATE);
+            eq.setEnabled(p.getBoolean("on", true));
+            short n = eq.getNumberOfBands();
+            if (n > 5) n = 5;
+            short[] range = eq.getBandLevelRange();
+            for (short b = 0; b < n; b++) {
+                int mb = p.getInt("band" + b, 0);
+                if (mb < range[0]) mb = range[0];
+                if (mb > range[1]) mb = range[1];
+                eq.setBandLevel(b, (short) mb);
+            }
+        } catch (Throwable ignored) {}
+    }
+
     // ---------- interno ----------
 
     private void playInternal() {
@@ -235,6 +273,7 @@ public class PlayerService extends Service {
                         .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                         .build());
                 mp.setDataSource(this, android.net.Uri.parse("file://" + t.data));
+                attachEq(mp);
                 requestFocus();
                 mp.setOnCompletionListener(mp1 -> {
                     if (rep == 2) {
@@ -355,6 +394,7 @@ public class PlayerService extends Service {
 
     @Override
     public void onDestroy() {
+        try { if (eq != null) { eq.release(); eq = null; } } catch (Throwable ignored) {}
         try { if (session != null) session.release(); } catch (Throwable ignored) {}
         try { if (mp != null) { mp.stop(); mp.release(); } } catch (Throwable ignored) {}
         try {
