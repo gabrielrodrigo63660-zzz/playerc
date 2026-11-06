@@ -10,7 +10,7 @@ import android.graphics.SweepGradient;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.view.View;
-import android.view.animation.FastOutSlowInInterpolator;
+import android.view.animation.PathInterpolator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -126,7 +126,7 @@ public class Y2kBgView extends View {
         if (slide != null) slide.cancel();
         slide = ValueAnimator.ofFloat(0f, 1f);
         slide.setDuration(940);
-        slide.setInterpolator(new FastOutSlowInInterpolator());
+        slide.setInterpolator(new PathInterpolator(0.4f, 0f, 0.2f, 1f));
         slide.addUpdateListener(a -> {
             prog = (Float) a.getAnimatedValue();
             if (prog >= 1f && oldItems != null) oldItems = null;

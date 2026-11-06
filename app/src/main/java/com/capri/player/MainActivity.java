@@ -394,11 +394,13 @@ public class MainActivity extends Activity {
         // tela cheia - botoes pegam a cor da capa
         fShuf.setAlpha(shuf ? 1f : 0.5f);
         fShuf.setColorFilter(shuf ? palSec : off);
-        fShuf.setBackgroundResource(shuf ? glowOval(palSec) : R.drawable.btn_circle);
+        if (shuf) fShuf.setBackgroundResource(glowOval(palSec));
+        else fShuf.setBackgroundResource(R.drawable.btn_circle);
         fRep.setAlpha(rep > 0 ? 1f : 0.5f);
         fRep.setImageResource(rep == 2 ? R.drawable.ic_repeat_one : R.drawable.ic_repeat);
         fRep.setColorFilter(rep > 0 ? palMain : off);
-        fRep.setBackgroundResource(rep > 0 ? glowOval(palMain) : R.drawable.btn_circle);
+        if (rep > 0) fRep.setBackgroundResource(glowOval(palMain));
+        else fRep.setBackgroundResource(R.drawable.btn_circle);
         refreshFullscreenTint();
     }
 
