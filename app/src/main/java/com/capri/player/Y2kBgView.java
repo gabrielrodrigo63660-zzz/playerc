@@ -1,5 +1,6 @@
 package com.capri.player;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.DashPathEffect;
@@ -9,15 +10,18 @@ import android.graphics.SweepGradient;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 /**
- * Fundo Y2K "vivo": cada musica recebe uma semente (do propio track id) e o
- * fundo se redesenha em formas diferentes — estrelas, smileys, blobs chrome,
- * mira, etiquetas mono e "fios" ligando, estilo quadro de evidencias.
+ * Fundo Y2K "vivo": cada musica recebe uma semente (do proprio id) e o fundo
+ * redesenha stickers numa composicao nova. A paleta pode vir da CAPA da
+ * musica (cores dominantes) ou ser o vermelho/verde padrao do app.
+ * Transicao: stickers antigos sao "arrastados" pra fora enquanto os novos
+ * entram por baixo.
  */
 public class Y2kBgView extends View {
 
@@ -42,40 +46,80 @@ public class Y2kBgView extends View {
         String txt;
     }
 
-    private final List<Item> items = new ArrayList<>();
     private final Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path path = new Path();
+
+    private List<Item> items = new ArrayList<>();
+    private List<Item> oldItems;   // grupo saindo ("arrastado") na transicao
+    private android.animation.ValueAnimator slide;
+    private float prog = 1f;
+    private float panDx, panDy;
+
     private long seed = 0x5EEDL;
+
+    // paleta "identidade" — troca quando a capa da musica manda cor
+    private int cMain = RED;
+    private int cSec = GREEN;
 
     public Y2kBgView(Context c, AttributeSet a) {
         super(c, a);
+    }
+
+    /** paleta vinda da capa (ou padrao do app quando nao tem capa) */
+    public void setPalette(int main, int sec) {
+        if (main == cMain && sec == cSec) return;
+        cMain = main;
+        cSec = sec;
+        regenerate();
+        slideIn();
     }
 
     /** muda a "identidade" do fundo — chamada a cada faixa tocada */
     public void setSeed(long s) {
         seed = s;
         regenerate();
-        setAlpha(0.08f);
-        animate().alpha(0.92f).setDuration(340).start();
+        slideIn();
     }
 
     @Override
     protected void onSizeChanged(int w, int h, int ow, int oh) {
         super.onSizeChanged(w, h, ow, oh);
+        oldItems = null;
+        prog = 1f;
         regenerate();
     }
 
+    private void slideIn() {
+        int w = getWidth(), h = getHeight();
+        if (oldItems != null) oldItems = null;
+        if (w == 0 || h == 0) return;
+
+        oldItems = new ArrayList<>(items);
+        Random r = new Random(seed ^ 0x2A11FL);
+        int dir = (seed & 1L) == 0 ? 1 : -1;
+        panDx = dir * w * (0.85f + r.nextFloat() * 0.5f);
+        panDy = -dir * h * (0.18f + r.nextFloat() * 0.3f);
+
+        prog = 0f;
+        if (slide != null) slide.cancel();
+        slide = ValueAnimator.ofFloat(0f, 1f);
+        slide.setDuration(640);
+        slide.setInterpolator(new DecelerateInterpolator());
+        slide.addUpdateListener(a -> {
+            prog = (Float) a.getAnimatedValue();
+            if (prog >= 1f && oldItems != null) oldItems = null;
+            invalidate();
+        });
+        slide.start();
+    }
+
     private void regenerate() {
-        items.clear();
+        items = new ArrayList<>();
         int w = getWidth(), h = getHeight();
         if (w == 0 || h == 0) return;
 
         Random r = new Random(seed * 2654435761L);
-        boolean redDomina = r.nextBoolean();
-        int main = redDomina ? RED : GREEN;
-        int sec = redDomina ? GREEN : RED;
-
-        int n = 7 + r.nextInt(5);
+        int n = 8 + r.nextInt(5);
         for (int i = 0; i < n; i++) {
             Item it = new Item();
             it.type = r.nextInt(5);
@@ -85,14 +129,14 @@ public class Y2kBgView extends View {
             if (it.s < 10) it.s = 10;
             it.rot = r.nextFloat() * 360f;
             float cor = r.nextFloat();
-            if (cor < 0.55f) it.color = main;
-            else if (cor < 0.85f) it.color = sec;
+            if (cor < 0.55f) it.color = cMain;
+            else if (cor < 0.85f) it.color = cSec;
             else it.color = WHITE;
 
             if (it.type == T_BLOB) {
                 boolean g = r.nextBoolean();
-                int c1 = g ? GREEN : RED;
-                int c2 = g ? 0xFF166832 : 0xFF61091C;
+                int c1 = g ? cMain : cSec;
+                int c2 = shade(c1, 0.25f);
                 it.grad = new SweepGradient(it.x, it.y, new int[]{
                         c1, WHITE, c2, 0xFF2A2A33, c1},
                         new float[]{0f, 0.22f, 0.5f, 0.8f, 1f});
@@ -114,7 +158,7 @@ public class Y2kBgView extends View {
             l.x = a.x;
             l.y = a.y;
             l.txt = b.x + ";" + b.y;
-            l.color = r.nextBoolean() ? RED : GREEN;
+            l.color = r.nextBoolean() ? cMain : cSec;
             items.add(l);
         }
         invalidate();
@@ -126,7 +170,7 @@ public class Y2kBgView extends View {
         int w = getWidth(), h = getHeight();
         float d = getContext().getResources().getDisplayMetrics().density;
 
-        // moldura HUD (estilo cyberpunk)
+        // moldura HUD (estilo cyberpunk) — imovel durante a transicao
         p.setShader(null);
         p.setStyle(Paint.Style.STROKE);
         p.setStrokeWidth(2 * d);
@@ -143,16 +187,48 @@ public class Y2kBgView extends View {
         canvas.drawLine(w, h - c, w, h, p);
         p.setAlpha(255);
 
-        for (Item it : items) {
+        // grupo antigo saindo ("arrastado")
+        if (oldItems != null) {
+            canvas.save();
+            canvas.translate(panDx * prog, panDy * prog);
+            drawItems(canvas, oldItems);
+            canvas.restore();
+        }
+        // grupo novo entrando
+        canvas.save();
+        if (oldItems != null) {
+            canvas.translate(-panDx * (1f - prog), -panDy * (1f - prog));
+        }
+        drawItems(canvas, items);
+        canvas.restore();
+
+        // pontinhos de brilho (imoveis)
+        p.setShader(null);
+        p.setStyle(Paint.Style.FILL);
+        p.setColor(WHITE);
+        p.setAlpha(28);
+        for (int i = 0; i < 14; i++) {
+            float px = (i * 97f) % w;
+            float py = (i * 53f) % h;
+            canvas.drawCircle(px, py, 1.1f * d, p);
+        }
+        p.setAlpha(255);
+    }
+
+    private void drawItems(Canvas canvas, List<Item> list) {
+        for (Item it : list) {
             if (it.type == T_WIRE) {
                 String[] xy = (it.txt == null ? "0;0" : it.txt).split(";");
                 float bx = parseF(xy[0]), by = parseF(xy.length > 1 ? xy[1] : "0");
                 p.setShader(null);
                 p.setStyle(Paint.Style.STROKE);
-                p.setStrokeWidth(1.6f * d);
+                p.setStrokeWidth(1.6f * getContext().getResources()
+                        .getDisplayMetrics().density);
                 p.setColor(it.color);
                 p.setAlpha(80);
-                p.setPathEffect(new DashPathEffect(new float[]{9 * d, 7 * d}, 0));
+                p.setPathEffect(new DashPathEffect(new float[]{
+                        9 * getContext().getResources().getDisplayMetrics().density,
+                        7 * getContext().getResources().getDisplayMetrics().density}, 0));
                 canvas.drawLine(it.x, it.y, bx, by, p);
                 p.setPathEffect(null);
                 p.setAlpha(255);
@@ -203,7 +279,8 @@ public class Y2kBgView extends View {
                     canvas.drawCircle(it.x, it.y, s, p);
                     p.setShader(null);
                     p.setStyle(Paint.Style.STROKE);
-                    p.setStrokeWidth(1.4f * d);
+                    p.setStrokeWidth(1.4f * getContext().getResources()
+                            .getDisplayMetrics().density);
                     p.setColor(WHITE);
                     p.setAlpha(110);
                     canvas.drawCircle(it.x, it.y, s, p);
@@ -215,7 +292,8 @@ public class Y2kBgView extends View {
                 case T_CROSS: {
                     p.setShader(null);
                     p.setStyle(Paint.Style.STROKE);
-                    p.setStrokeWidth(1.4f * d);
+                    p.setStrokeWidth(1.4f * getContext().getResources()
+                            .getDisplayMetrics().density);
                     p.setColor(it.color);
                     p.setAlpha(it.color == WHITE ? 110 : 200);
                     float s = it.s * 0.8f;
@@ -238,18 +316,13 @@ public class Y2kBgView extends View {
             }
             canvas.restore();
         }
+    }
 
-        // pontinhos de brilho "nao importa o que"
-        p.setShader(null);
-        p.setStyle(Paint.Style.FILL);
-        p.setColor(WHITE);
-        p.setAlpha(28);
-        for (int i = 0; i < 14; i++) {
-            float px = (i * 97f) % w;
-            float py = (i * 53f) % h;
-            canvas.drawCircle(px, py, 1.1f * d, p);
-        }
-        p.setAlpha(255);
+    private static int shade(int c, float f) {
+        int r = (int) (((c >> 16) & 255) * f);
+        int g = (int) (((c >> 8) & 255) * f);
+        int b = (int) ((c & 255) * f);
+        return 0xFF000000 | (r << 16) | (g << 8) | b;
     }
 
     private static float parseF(String s) {

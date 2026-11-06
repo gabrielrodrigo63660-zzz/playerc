@@ -5,7 +5,10 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaMetadata;
@@ -42,6 +45,13 @@ public class PlayerService extends Service {
     private final Handler main = new Handler(Looper.getMainLooper());
     private volatile Listener listener;
 
+    /** fone/Bluetooth desconectou -> pausa antes do som vazar no speaker */
+    private final BroadcastReceiver noisy = new BroadcastReceiver() {
+        @Override public void onReceive(Context context, Intent intent) {
+            if (isPlaying()) toggle();
+        }
+    };
+
     private MediaPlayer mp;
     private List<Track> queue = Collections.emptyList();
     private int idx = -1;
@@ -69,6 +79,11 @@ public class PlayerService extends Service {
             @Override public void onSkipToPrevious() { prev(); }
             @Override public void onSeekTo(long pos) { seekTo(pos); }
         });
+
+        try {
+            registerReceiver(noisy,
+                    new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY));
+        } catch (Throwable ignored) {}
     }
 
     @Override
@@ -401,6 +416,7 @@ public class PlayerService extends Service {
             AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
             am.abandonAudioFocus(null);
         } catch (Throwable ignored) {}
+        try { unregisterReceiver(noisy); } catch (Throwable ignored) {}
         super.onDestroy();
     }
 }

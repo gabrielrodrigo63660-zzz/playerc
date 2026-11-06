@@ -20,6 +20,7 @@ import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -63,8 +64,21 @@ public class MainActivity extends Activity {
     private ImageView nArt, fArt;
     private SeekBar bar, fBar;
     private View nowBar, fullRoot;
-    private Y2kBgView bgseed;
+    private Y2kBgView bgseed, mainseed;
     private ValueAnimator pulse;
+
+    // gestos na capa
+    private float dragStartX;
+    private long dragBase;
+    private boolean dragging;
+    private long tapDown;
+    private long lastTapAt;
+    private boolean lastTapSide;
+
+    private final Runnable pendingTap = () -> {
+        if (srv != null) srv.toggle();
+        lastTapAt = 0;
+    };
 
     private List<Track> all = new ArrayList<>();
     private final List<Object[]> groups = new ArrayList<>(); // {String name, Long count, String path}
@@ -101,6 +115,7 @@ public class MainActivity extends Activity {
 
             // fundo Y2K troca de "identidade" + glitch no logo
             bgseed.setSeed(trackId);
+            mainseed.setSeed(trackId);
             fSeed.setText(String.format(Locale.ROOT, "seed://0x%08X", trackId));
             glitchBurst();
 
@@ -112,6 +127,12 @@ public class MainActivity extends Activity {
                     runOnUiThread(() -> {
                         if (p.equals(nArt.getTag())) nArt.setImageBitmap(b);
                         if (p.equals(fArt.getTag())) fArt.setImageBitmap(b);
+                        // paleta dos stickers = cores da capa
+                        int[] pal = (b == null)
+                                ? new int[]{0xFFFF2445, 0xFF3DFF5E}
+                                : extractPalette(b);
+                        bgseed.setPalette(pal[0], pal[1]);
+                        mainseed.setPalette(pal[0], pal[1]);
                     });
                 }).start();
                 nArt.setTag(path);
@@ -186,6 +207,7 @@ public class MainActivity extends Activity {
         logoG2 = findViewById(R.id.logoG2);
         logoC = findViewById(R.id.logoC);
         bgseed = findViewById(R.id.bgseed);
+        mainseed = findViewById(R.id.mainseed);
         fSeed = findViewById(R.id.fseed);
         tabAll = findViewById(R.id.tabAll);
         tabArtist = findViewById(R.id.tabArtist);
@@ -284,10 +306,11 @@ public class MainActivity extends Activity {
 
         btnEQ.setOnClickListener(v -> showEqDialog());
         bgseed.setSeed(0x5EEDL);
+        mainseed.setSeed(0x5EEDL);
         startGlitchLoop();
 
         nArt.setOnClickListener(v -> showFull(true));
-        fArt.setOnClickListener(v -> { if (srv != null) srv.toggle(); });
+        fArt.setOnTouchListener(coverGestures());
         findViewById(R.id.openfull).setOnClickListener(v -> showFull(true));
         findViewById(R.id.fclose).setOnClickListener(v -> showFull(false));
 
@@ -519,6 +542,107 @@ public class MainActivity extends Activity {
 
     private static String fmtDb(int mB) {
         return (mB >= 0 ? "+" : "") + (mB / 100) + " dB";
+    }
+
+    // ------------------ gestos na capa ------------------
+
+    /** arrastar = adiantar/voltar; toque simples = play/pause;
+     *  toque duplo na lateral = pular faixa (esq = volta, dir = avança) */
+    private View.OnTouchListener coverGestures() {
+        return (v, ev) -> {
+            if (srv == null) return true;
+            switch (ev.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN:
+                    dragStartX = ev.getX();
+                    dragBase = srv.pos();
+                    dragging = false;
+                    tapDown = System.currentTimeMillis();
+                    return true;
+                case MotionEvent.ACTION_MOVE: {
+                    float dx = ev.getX() - dragStartX;
+                    if (!dragging && Math.abs(dx) > 26f) dragging = true;
+                    if (dragging) {
+                        long p = (long) (dragBase + dx * 45f);
+                        long d = srv.dur();
+                        if (p < 0) p = 0;
+                        if (d > 0 && p > d) p = d;
+                        srv.seekTo(p);
+                        fBar.setProgress((int) p);
+                        bar.setProgress((int) p);
+                        fCur.setText(fmt(p));
+                        cur.setText(fmt(p));
+                    }
+                    return true;
+                }
+                case MotionEvent.ACTION_UP: {
+                    if (!dragging && System.currentTimeMillis() - tapDown < 280) {
+                        long now = System.currentTimeMillis();
+                        boolean right = ev.getX() > v.getWidth() * 0.5f;
+                        if (lastTapAt != 0 && now - lastTapAt < 350
+                                && lastTapSide == right) {
+                            fArt.removeCallbacks(pendingTap);
+                            lastTapAt = 0;
+                            if (right) playFromRelative(1);
+                            else playFromRelative(-1);
+                        } else {
+                            lastTapAt = now;
+                            lastTapSide = right;
+                            fArt.removeCallbacks(pendingTap);
+                            fArt.postDelayed(pendingTap, 360);
+                        }
+                    }
+                    return true;
+                }
+            }
+            return true;
+        };
+    }
+
+    // ------------------ paleta pela capa ------------------
+
+    /** extrai as 2 cores dominantes VIVAS da capa (fallback: vermelho/verde) */
+    private static int[] extractPalette(Bitmap src) {
+        int[] def = {0xFFFF2445, 0xFF3DFF5E};
+        try {
+            Bitmap small = Bitmap.createScaledBitmap(src, 16, 16, true);
+            int[] cnt = new int[4096];
+            int[] sample = new int[4096];
+            for (int y = 0; y < 16; y++) {
+                for (int x = 0; x < 16; x++) {
+                    int c = small.getPixel(x, y);
+                    int r = (c >> 16) & 255, g = (c >> 8) & 255, b2 = c & 255;
+                    int mx = Math.max(Math.max(r, g), b2);
+                    int mn = Math.min(Math.min(r, g), b2);
+                    if (mx - mn <= 55 || mx <= 70 || mx >= 245) continue;
+                    int bk = ((r >> 4) << 8) | ((g >> 4) << 4) | (b2 >> 4);
+                    cnt[bk]++;
+                    sample[bk] = c;
+                }
+            }
+            int first = -1, second = -1;
+            for (int i = 0; i < 4096; i++) {
+                if (cnt[i] == 0) continue;
+                if (first == -1 || cnt[i] > cnt[first]) {
+                    second = first;
+                    first = i;
+                } else if (second == -1 || cnt[i] > cnt[second]) {
+                    second = i;
+                }
+            }
+            if (first == -1) return def;
+            int c1 = sample[first];
+            int c2 = (second == -1) ? shadeColor(c1, 0.55f) : sample[second];
+            return new int[]{c1, c2};
+        } catch (Throwable e) {
+            return def;
+        }
+    }
+
+    private static int shadeColor(int c, float f) {
+        int r = Math.min(255, (int) (((c >> 16) & 255) * f));
+        int g = Math.min(255, (int) (((c >> 8) & 255) * f));
+        int b = Math.min(255, (int) ((c & 255) * f));
+        return 0xFF000000 | (r << 16) | (g << 8) | b;
     }
 
     private void startGlitchLoop() {

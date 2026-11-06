@@ -206,34 +206,44 @@
             </LinearLayout>
         </HorizontalScrollView>
 
-        <!-- lista / grade -->
-        <ListView
-            android:id="@+id/list"
+        <!-- lista / grade (+ stickers por baixo) -->
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:divider="@null"
-            android:dividerHeight="0dp"
-            android:paddingStart="6dp"
-            android:paddingEnd="6dp"
-            android:scrollbars="none"
-            android:listSelector="@android:color/transparent"
-            android:scrollingCache="false" />
+            android:layout_weight="1">
 
-        <GridView
-            android:id="@+id/grid"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:numColumns="2"
-            android:horizontalSpacing="8dp"
-            android:verticalSpacing="10dp"
-            android:paddingStart="6dp"
-            android:paddingEnd="6dp"
-            android:scrollbars="none"
-            android:scrollingCache="false"
-            android:listSelector="@android:color/transparent"
-            android:visibility="gone" />
+            <com.capri.player.Y2kBgView
+                android:id="@+id/mainseed"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:alpha="0.55" />
+
+            <ListView
+                android:id="@+id/list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:divider="@null"
+                android:dividerHeight="0dp"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:scrollbars="none"
+                android:listSelector="@android:color/transparent"
+                android:scrollingCache="false" />
+
+            <GridView
+                android:id="@+id/grid"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:numColumns="2"
+                android:horizontalSpacing="8dp"
+                android:verticalSpacing="10dp"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:scrollbars="none"
+                android:scrollingCache="false"
+                android:listSelector="@android:color/transparent"
+                android:visibility="gone" />
+        </FrameLayout>
 
         <!-- ============ MINI PLAYER ============ -->
         <LinearLayout
@@ -241,7 +251,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@color/panel"
+            android:background="@drawable/chrome_panel"
             android:visibility="gone"
             android:paddingStart="14dp"
             android:paddingEnd="14dp"
